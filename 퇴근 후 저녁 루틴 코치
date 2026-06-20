@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>퇴근 후 저녁 루틴 코치 비서</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Premium Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Inter & Noto Sans KR -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans KR', sans-serif;
+        }
+        /* Custom scrollbar for beautiful dark UI */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a; /* Slate 900 */
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4f46e5; /* Indigo 600 */
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #6366f1; /* Indigo 500 */
+        }
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 15px rgba(99, 102, 241, 0.4); }
+            50% { box-shadow: 0 0 25px rgba(168, 85, 247, 0.6); }
+        }
+        .glow-active {
+            animation: pulse-glow 3s infinite;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col selection:bg-indigo-500 selection:text-white">
+
+<!-- Header Navigation -->
+<header class="border-b border-indigo-900/50 bg-slate-900/80 backdrop-blur sticky top-0 z-50 px-4 py-3">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-3">
+        <div class="flex items-center gap-3">
+            <div class="bg-gradient-to-tr from-indigo-500 to-purple-500 p-2.5 rounded-xl shadow-lg shadow-indigo-500/20">
+                <i class="fa-solid fa-user-astronaut text-xl text-white"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-lg leading-tight tracking-tight flex items-center gap-2">
+                    루틴 코치 야누스 <span class="text-xs bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-full border border-indigo-500/30">Beta</span>
+                </h1>
+                <p class="text-xs text-slate-400">퇴근 후 나를 지키는 위대한 저녁 기적</p>
+            </div>
+        </div>
+
+        <!-- Real-time Stats Header & Controls -->
+        <div class="flex items-center gap-4 flex-wrap justify-center">
+            <!-- Points Panel -->
+            <div class="bg-indigo-950/60 border border-indigo-800/40 px-4 py-1.5 rounded-xl flex items-center gap-2">
+                <i class="fa-solid fa-crown text-amber-400"></i>
+                <div class="text-right">
+                    <p class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">내 성취도 포인트</p>
+                    <p class="font-bold text-indigo-300 text-sm" id="header-points">0 <span class="text-xs text-slate-400">p</span></p>
+                </div>
+            </div>
+
+            <!-- Current Weekday Selector for Simulation -->
+            <div class="flex items-center bg-slate-800/60 rounded-xl p-1 border border-slate-700/50">
+                <span class="text-xs text-slate-400 px-2 hidden md:inline">요일 테스트:</span>
+                <select id="day-selector" class="bg-slate-900 text-xs text-slate-200 border-none rounded-lg py-1 px-2 focus:ring-1 focus:ring-indigo-500 focus:outline-none">
+                    <option value="1">월요일 (공부/30분식사)</option>
+                    <option value="2">화요일 (운동/쉐이크식) - 바로 직행!</option>
+                    <option value="3">수요일 (공부/30분식사)</option>
+                    <option value="4">목요일 (운동/쉐이크식) - 바로 직행!</option>
+                    <option value="5">금요일 (공부/30분식사)</option>
+                </select>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Main Dashboard -->
+<main class="max-w-7xl w-full mx-auto p-4 lg:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1">
+    
+    <!-- Left Panel: Routine, Timer & Gamification (Cols: 7) -->
+    <section class="lg:col-span-7 flex flex-col gap-6">
+        
+        <!-- Welcome banner with dynamic text based on chosen weekday -->
+        <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-purple-950 p-6 rounded-2xl border border-indigo-900/40 relative overflow-hidden">
+            <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-purple-600/10 rounded-full blur-2xl"></div>
+            <div class="relative z-10">
+                <div class="flex items-center gap-2 text-indigo-400 text-xs font-semibold uppercase tracking-wider mb-2">
+                    <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                    <span id="banner-day-badge">오늘의 타겟 세션</span>
+                </div>
+                <h2 class="text-xl sm:text-2xl font-bold tracking-tight text-white mb-2" id="banner-title">
+                    월요일 공부 버닝 데이!
+                </h2>
+                <p class="text-xs sm:text-sm text-slate-300" id="banner-desc">
+                    퇴근은 18:00 예정. 맛있는 저녁 식사 30분 동안 든든히 드시고 공부에 바로 착수하세요!
+                </p>
+                
+                <!-- Plan B Toggle Banner -->
+                <div class="mt-4 pt-4 border-t border-indigo-900/40 flex flex-wrap items-center justify-between gap-3">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-battery-quarter text-amber-400"></i>
+                        <span class="text-xs text-slate-300">오늘 넉다운 상태이신가요?</span>
+                    </div>
+                    <button id="planb-toggle" class="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 text-xs font-medium px-3 py-1.5 rounded-lg border border-amber-500/30 transition-all flex items-center gap-1.5">
+                        <i class="fa-solid fa-moon"></i>
+                        <span>플랜 B(미니 루틴) 가동</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Routine Checklist Card -->
+        <div class="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-5 backdrop-blur-sm">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-list-check text-indigo-400 text-lg"></i>
+                    <h3 class="font-bold text-sm tracking-tight text-white uppercase">체크리스트 & 미션</h3>
+                </div>
+                <span class="text-[11px] text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded-full border border-slate-700/50" id="checked-ratio">0/4 달성</span>
+            </div>
+            
+            <!-- Dynamic Tasks Container -->
+            <div class="space-y-3" id="routine-tasks-container">
+                <!-- Dynamically loaded via JS -->
+            </div>
+        </div>
+
+        <!-- Timer Section -->
+        <div class="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-6 backdrop-blur-sm relative overflow-hidden" id="timer-box">
+            <div class="absolute top-0 right-0 p-3 text-slate-500 hover:text-slate-300 cursor-pointer" onclick="resetTimerToDefault()">
+                <i class="fa-solid fa-rotate-left text-sm"></i>
+            </div>
+            
+            <div class="text-center mb-4">
+                <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-widest" id="timer-subtitle">FOCUS TIMER</h3>
+                <span class="text-xs bg-indigo-500/10 text-indigo-300 px-2 py-0.5 rounded border border-indigo-500/20 mt-1 inline-block" id="timer-current-mode">뽀모도로 집중 세션 (25분)</span>
+            </div>
+
+            <!-- Beautiful Circular Visual representation -->
+            <div class="relative w-48 h-48 mx-auto my-6 flex items-center justify-center">
+                <!-- SVG Ring -->
+                <svg class="absolute w-full h-full transform -rotate-90">
+                    <circle cx="96" cy="96" r="84" stroke="currentColor" class="text-slate-800" stroke-width="6" fill="transparent" />
+                    <circle id="timer-progress-circle" cx="96" cy="96" r="84" stroke="currentColor" class="text-indigo-500 transition-all duration-300" stroke-width="8" stroke-dasharray="527" stroke-dashoffset="0" stroke-linecap="round" fill="transparent" />
+                </svg>
+                
+                <!-- Display Numbers -->
+                <div class="relative z-10 flex flex-col items-center">
+                    <span class="text-4xl font-extrabold tracking-tight text-white" id="timer-digits">25:00</span>
+                    <span class="text-[10px] text-indigo-400 font-semibold tracking-wider mt-1" id="timer-status">대기 중</span>
+                </div>
+            </div>
+
+            <!-- Timer Presets & Controls -->
+            <div class="flex flex-col gap-4">
+                <div class="flex items-center justify-center gap-2 flex-wrap">
+                    <button class="preset-btn bg-slate-800/50 hover:bg-indigo-900/40 text-xs px-3 py-1.5 rounded-lg border border-slate-700/50 text-slate-300 transition-all" onclick="setTimer(25, '뽀모도로 집중 공부 세션')">
+                        <i class="fa-solid fa-brain mr-1"></i> 공부 (25분)
+                    </button>
+                    <button class="preset-btn bg-slate-800/50 hover:bg-indigo-900/40 text-xs px-3 py-1.5 rounded-lg border border-slate-700/50 text-slate-300 transition-all" onclick="setTimer(30, '맛있고 여유로운 저녁 식사')">
+                        <i class="fa-solid fa-bowl-food mr-1"></i> 저녁 식사 (30분)
+                    </button>
+                    <button class="preset-btn bg-slate-800/50 hover:bg-indigo-900/40 text-xs px-3 py-1.5 rounded-lg border border-slate-700/50 text-slate-300 transition-all" onclick="setTimer(45, '버닝 운동 세션')">
+                        <i class="fa-solid fa-dumbbell mr-1"></i> 운동 (45분)
+                    </button>
+                    <button class="preset-btn bg-slate-800/50 hover:bg-indigo-900/40 text-xs px-3 py-1.5 rounded-lg border border-slate-700/50 text-slate-300 transition-all" onclick="setTimer(5, '미니 쉐이크/휴식 세션')">
+                        <i class="fa-solid fa-mug-hot mr-1"></i> 휴식 (5분)
+                    </button>
+                </div>
+
+                <!-- Play, Pause, Reset Control row -->
+                <div class="flex items-center justify-center gap-3">
+                    <button id="timer-play-pause" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-6 py-2.5 rounded-xl shadow-lg shadow-indigo-600/20 transition-all flex items-center gap-2">
+                        <i id="play-icon" class="fa-solid fa-play"></i> <span id="play-text">타이머 가동</span>
+                    </button>
+                    <button id="timer-give-up" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2.5 rounded-xl border border-slate-700/50 text-xs font-semibold transition-all">
+                        초기화
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reward Shop Card -->
+        <div class="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-5 backdrop-blur-sm">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-store text-purple-400 text-lg"></i>
+                    <h3 class="font-bold text-sm tracking-tight text-white uppercase">나만의 보상 상점</h3>
+                </div>
+                <button onclick="openAddRewardModal()" class="text-[11px] bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 px-2.5 py-1 rounded-lg border border-purple-500/30 transition-all">
+                    + 보상 등록
+                </button>
+            </div>
+
+            <!-- Reward Items List -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="rewards-container">
+                <!-- Dynamically loaded -->
+            </div>
+        </div>
+
+    </section>
+
+    <!-- Right Panel: AI Coach Assistant (Cols: 5) -->
+    <section class="lg:col-span-5 flex flex-col gap-4 h-[calc(100vh-120px)] min-h-[500px]">
+        
+        <!-- AI Coach Head / Profile -->
+        <div class="bg-slate-900 border border-indigo-950/80 rounded-2xl p-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="relative">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-base shadow-inner">
+                        YA
+                    </div>
+                    <span class="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-slate-900 rounded-full"></span>
+                </div>
+                <div>
+                    <h4 class="font-bold text-sm text-white">야누스 코치</h4>
+                    <span class="text-[10px] text-emerald-400 font-medium">초집중 밀착 가이드 중...</span>
+                </div>
+            </div>
+            
+            <button onclick="resetChatHistory()" class="text-xs text-slate-500 hover:text-slate-300 flex items-center gap-1 bg-slate-800/40 px-2 py-1 rounded border border-slate-800">
+                <i class="fa-solid fa-trash-can"></i> 대화 리셋
+            </button>
+        </div>
+
+        <!-- Chat History Window -->
+        <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl flex-1 flex flex-col overflow-hidden backdrop-blur-sm relative">
+            
+            <!-- Chat Container (Scrollable) -->
+            <div id="chat-messages" class="flex-1 p-4 overflow-y-auto space-y-4 text-sm">
+                <!-- Welcome system message -->
+                <div class="flex gap-3 items-start">
+                    <div class="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold text-xs flex-shrink-0">Y</div>
+                    <div class="bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 max-w-[85%] text-slate-200">
+                        반갑습니다! 오늘 밤 루틴 메이트 <b>야누스 코치</b>입니다. 퇴근길이신가요, 아니면 벌써 운동 장소나 집에 도착하셨나요? 
+                        <br><br>
+                        포인트 상점(치킨 획득하기 등!)을 활용하여 강력한 의지를 함께 키워봅시다. 하단의 <b>빠른 답장 버튼</b>을 활용하면 더 손쉬운 진행이 가능합니다. 🔥
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loader Spinner for Chat -->
+            <div id="chat-loader" class="absolute bottom-20 left-4 bg-slate-900 border border-slate-800 text-xs text-indigo-400 px-3 py-1.5 rounded-full flex items-center gap-2 hidden shadow-lg shadow-black/40">
+                <i class="fa-solid fa-spinner animate-spin"></i> 야누스 코치가 계획 짜는 중...
+            </div>
+
+            <!-- Quick Suggestion Buttons Container -->
+            <div class="px-4 py-2 border-t border-slate-800/50 bg-slate-950/40">
+                <p class="text-[10px] text-slate-500 uppercase tracking-widest font-semibold mb-1.5">이런 답변은 어떠세요?</p>
+                <div class="flex items-center gap-1.5 overflow-x-auto pb-1" id="quick-reply-wrapper">
+                    <!-- Loaded dynamically based on Day & Actions -->
+                </div>
+            </div>
+
+            <!-- Input Bar -->
+            <div class="p-3 bg-slate-900 border-t border-slate-800/80 flex items-center gap-2">
+                <input id="chat-input" type="text" placeholder="야누스 코치에게 현재 상황이나 고충을 말해보세요..." class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
+                <button id="chat-send-btn" class="bg-indigo-600 hover:bg-indigo-500 text-white w-9 h-9 rounded-xl flex items-center justify-center transition-all flex-shrink-0 shadow-lg shadow-indigo-600/10">
+                    <i class="fa-solid fa-paper-plane text-xs"></i>
+                </button>
+            </div>
+        </div>
+
+    </section>
+
+</main>
+
+<!-- Modal: Add Custom Reward -->
+<div id="add-reward-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center hidden p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl animate-in fade-in duration-200">
+        <div class="p-4 border-b border-slate-800 flex justify-between items-center">
+            <h4 class="font-bold text-sm text-white flex items-center gap-1.5">
+                <i class="fa-solid fa-gift text-purple-400"></i> 나만의 보상 만들기
+            </h4>
+            <button onclick="closeAddRewardModal()" class="text-slate-400 hover:text-slate-200 text-xs">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div class="p-4 space-y-3.5 text-xs">
+            <div>
+                <label class="block text-slate-400 font-medium mb-1.5">보상 이름 (예: 굽네치킨, 맥주 한 캔, 주말 꿀잠)</label>
+                <input id="reward-name-input" type="text" placeholder="예: 맛있는 뿌링클 치킨" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+            </div>
+            <div>
+                <label class="block text-slate-400 font-medium mb-1.5">필요 포인트 설정 (최소 50p 이상)</label>
+                <input id="reward-points-input" type="number" min="50" step="50" value="500" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+            </div>
+            <div>
+                <label class="block text-slate-400 font-medium mb-1.5">이모지 선택</label>
+                <div class="flex items-center gap-2 overflow-x-auto pb-1" id="emoji-selector">
+                    <button class="emoji-btn bg-slate-800 p-2 rounded-lg text-lg border border-transparent hover:border-indigo-500 transition-all" onclick="selectEmoji('🍗')">🍗</button>
+                    <button class="emoji-btn bg-slate-800 p-2 rounded-lg text-lg border border-transparent hover:border-indigo-500 transition-all" onclick="selectEmoji('🍺')">🍺</button>
+                    <button class="emoji-btn bg-slate-800 p-2 rounded-lg text-lg border border-transparent hover:border-indigo-500 transition-all" onclick="selectEmoji('🛌')">🛌</button>
+                    <button class="emoji-btn bg-slate-800 p-2 rounded-lg text-lg border border-transparent hover:border-indigo-500 transition-all" onclick="selectEmoji('🎮')">🎮</button>
+                    <button class="emoji-btn bg-slate-800 p-2 rounded-lg text-lg border border-transparent hover:border-indigo-500 transition-all" onclick="selectEmoji('🍕')">🍕</button>
+                    <button class="emoji-btn bg-slate-800 p-2 rounded-lg text-lg border border-transparent hover:border-indigo-500 transition-all" onclick="selectEmoji('🍿')">🍿</button>
+                </div>
+                <input id="reward-emoji-hidden" type="hidden" value="🍗">
+            </div>
+        </div>
+        <div class="p-4 bg-slate-950 border-t border-slate-800 flex justify-end gap-2">
+            <button onclick="closeAddRewardModal()" class="px-3 py-1.5 bg-slate-800 text-slate-300 rounded-lg hover:bg-slate-700 transition-all text-xs">취소</button>
+            <button onclick="createNewReward()" class="px-3.5 py-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-500 transition-all text-xs font-bold shadow-lg shadow-indigo-600/10">등록 완료</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Alert Alert/Message overlay (No browser alert rule fallback) -->
+<div id="alert-modal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center hidden p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-xs overflow-hidden shadow-2xl text-center">
+        <div class="p-5 text-slate-200">
+            <div class="w-11 h-11 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 rounded-full flex items-center justify-center mx-auto mb-3.5 text-lg">
+                <i id="alert-icon" class="fa-solid fa-circle-info"></i>
+            </div>
+            <h5 class="font-bold text-sm mb-1.5 text-white" id="alert-title">알림</h5>
+            <p class="text-xs text-slate-400 leading-relaxed" id="alert-message">메시지 내용</p>
+        </div>
+        <div class="p-3 bg-slate-950 border-t border-slate-800">
+            <button onclick="closeAlertModal()" class="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-indigo-600/10">확인</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // System State Variables with Persistent LocalStorage Support
+    let userPoints = parseInt(localStorage.getItem('janus_points') || '0');
+    let selectedDay = 1; // 1: Mon, 2: Tue, 3: Wed, 4: Thu, 5: Fri
+    let currentModePlanB = false;
+    let routineTasks = [];
+    
+    // Reward Shop Lists with Storage Backup
+    let defaultRewards = [
+        { id: 1, name: '굽네치킨 한 마리 🍗', points: 1000, emoji: '🍗' },
+        { id: 2, name: '시원한 캔맥주 1캔 🍺', points: 250, emoji: '🍺' },
+        { id: 3, name: '주말 꿀잠 프리패스 🛌', points: 500, emoji: '🛌' }
+    ];
+    let rewards = JSON.parse(localStorage.getItem('janus_rewards') || JSON.stringify(defaultRewards));
+
+    // Timer Variables
+    let timerInterval = null;
+    let timerTimeLeft = 1500; // 25 min default
+    let timerTotalDuration = 1500;
+    let timerModeName = '뽀모도로 집중 공부 세션';
+    let timerIsRunning = false;
+
+    // Chat History List for Gemini Memory
+    let chatHistory = [];
+
+    // Synthesize Audio Feedback (SFX Ding)
+    function playDingSFX() {
+        try {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContext) return;
+            const ctx = new AudioContext();
+            
+            // Generate elegant 3-chord ding
+            const playTone = (frequency, delay, duration) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.value = frequency;
+                
+                gain.gain.setValueAtTime(0.3, delay);
+                gain.gain.exponentialRampToValueAtTime(0.0001, delay + duration);
+                
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                
+                osc.start(delay);
+                osc.stop(delay + duration);
+            };
+            
+            playTone(523.25, ctx.currentTime, 0.4); // C5
+            playTone(659.25, ctx.currentTime + 0.1, 0.4); // E5
+            playTone(783.99, ctx.currentTime + 0.2, 0.6); // G5
+        } catch (e) {
+            console.error("Audio Web Synth not available", e);
+        }
+    }
+
+    // Save State Utility
+    function saveSystemState() {
+        localStorage.setItem('janus_points', userPoints.toString());
+        localStorage.setItem('janus_rewards', JSON.stringify(rewards));
+    }
+
+    // Custom non-blocking modal replacement for alert()
+    function showCustomAlert(title, message, iconClass = "fa-circle-info") {
+        document.getElementById('alert-title').innerText = title;
+        document.getElementById('alert-message').innerText = message;
+        document.getElementById('alert-icon').className = `fa-solid ${iconClass}`;
+        document.getElementById('alert-modal').classList.remove('hidden');
+    }
+
+    function closeAlertModal() {
+        document.getElementById('alert-modal').classList.add('hidden');
+    }
+
+    // Routine definitions according to user requirements
+    function loadRoutine(dayNum, usePlanB = false) {
+        dayNum = parseInt(dayNum);
+        currentModePlanB = usePlanB;
+        
+        let title = "";
+        let desc = "";
+        let tasks = [];
+
+        if (dayNum === 1 || dayNum === 3) {
+            // Monday / Wednesday: Study Focus, dinner 30m
+            title = dayNum === 1 ? "월요일 공부 버닝 데이! 📚" : "수요일 공부 버닝 데이! 📚";
+            desc = "퇴근은 18:00 예정. 맛있는 저녁 식사 30분 동안 든든히 드시고 공부에 바로 착수하세요!";
+            
+            if (!usePlanB) {
+                tasks = [
+                    { id: 't1', text: '18:00 퇴근길 안전 도착 인증', points: 15, checked: false, type: 'basic' },
+                    { id: 't2', text: '30분 타이머 켜고 맛있는 저녁 식사 즐기기 🍚', points: 20, checked: false, type: 'basic' },
+                    { id: 't3', text: '식사 마친 뒤 미루지 말고 책상 앞에 똑바로 앉기', points: 25, checked: false, type: 'study', value: 15 },
+                    { id: 't4', text: '자격증 공부 25분 집중 세션 완수 (뽀모도로)', points: 40, checked: false, type: 'study', value: 25 }
+                ];
+            } else {
+                tasks = [
+                    { id: 't1', text: '[플랜B] 18:00 무사 도착 후 개운하게 세수하기', points: 10, checked: false, type: 'basic' },
+                    { id: 't2', text: '[플랜B] 저녁 먹으며 스마트폰으로 강의 딱 1편만 편하게 보기', points: 15, checked: false, type: 'study', value: 5 }
+                ];
+            }
+        } else if (dayNum === 2 || dayNum === 4) {
+            // Tuesday / Thursday: Workout Focus, direct to gym, shake meal
+            title = dayNum === 2 ? "화요일 무적의 운동 직행! 🏋️‍♂️" : "목요일 무적의 운동 직행! 🏋️‍♂️";
+            desc = "퇴근은 17:30 예정. 집 문 열지 마세요! 동선 그대로 센터/운동지로 바로 직행한 뒤 쉐이크 식사 마감!";
+            
+            if (!usePlanB) {
+                tasks = [
+                    { id: 't1', text: '17:30 퇴근길 집 지나쳐 곧장 운동 장소 도착', points: 45, checked: false, type: 'workout', value: 1 },
+                    { id: 't2', text: '30분간 버닝 오운완 수행하기 (유산소/근력)', points: 45, checked: false, type: 'workout', value: 1 },
+                    { id: 't3', text: '귀가 후 간편하게 마시는 단백질 쉐이크 한 병 완샷 🍼', points: 20, checked: false, type: 'basic' },
+                    { id: 't4', text: '개운하게 샤워하고 일찍 쉴 수 있도록 취침 준비', points: 15, checked: false, type: 'basic' }
+                ];
+            } else {
+                tasks = [
+                    { id: 't1', text: '[플랜B] 퇴근 후 집까지 정거장 전에서 내려 10분 걷기', points: 15, checked: false, type: 'workout', value: 1 },
+                    { id: 't2', text: '[플랜B] 든든하게 단백질 쉐이크 타 마시기', points: 10, checked: false, type: 'basic' }
+                ];
+            }
+        } else if (dayNum === 5) {
+            // Friday: Study Focus (Early Home), dinner 30m
+            title = "금요일 주말 전 조기 스퍼트! 🚀";
+            desc = "퇴근은 16:40 예정. 불금의 여유에 안주하지 말고 맛있는 30분 저녁 식사 후 단시간 폭풍 공부 가동!";
+            
+            if (!usePlanB) {
+                tasks = [
+                    { id: 't1', text: '16:40 금요 조기 귀가 후 손발 깨끗이 씻기', points: 15, checked: false, type: 'basic' },
+                    { id: 't2', text: '불금 맞이 기분좋은 식사하기 (30분 집중)', points: 20, checked: false, type: 'basic' },
+                    { id: 't3', text: '자격증 핵심 인강 시청 및 공부 1세션 완수', points: 35, checked: false, type: 'study', value: 20 },
+                    { id: 't4', text: '주말 전 가벼운 주간 정산 및 보상 상점 이용하기', points: 15, checked: false, type: 'basic' }
+                ];
+            } else {
+                tasks = [
+                    { id: 't1', text: '[플랜B] 퇴근 후 무조건 편한 옷으로 갈아입기', points: 10, checked: false, type: 'basic' },
+                    { id: 't2', text: '[플랜B] 침대에 누워 편안하게 강의 요약본 딱 5분만 읽기', points: 15, checked: false, type: 'study', value: 10 }
+                ];
+            }
+        }
+
+        routineTasks = tasks;
+        document.getElementById('banner-title').innerText = title + (usePlanB ? " [Plan B 가동중]" : "");
+        document.getElementById('banner-desc').innerText = desc;
+        document.getElementById('banner-day-badge').innerText = `DAY ${dayNum} ROUTINE`;
+        
+        renderTasks();
+        renderQuickReplies();
+    }
+
+    // Draw Todo items to UI
+    function renderTasks() {
+        const container = document.getElementById('routine-tasks-container');
+        container.innerHTML = '';
+        
+        let checkedCount = 0;
+        
+        routineTasks.forEach((task, index) => {
+            if (task.checked) checkedCount++;
+            
+            const card = document.createElement('div');
+            card.className = `flex items-center justify-between p-3.5 rounded-xl border transition-all ${
+                task.checked 
+                ? 'bg-indigo-950/20 border-indigo-900/40 text-slate-400 line-through' 
+                : 'bg-slate-900 border-slate-800 hover:border-slate-700 text-slate-200'
+            }`;
+            
+            let typeBadge = '';
+            if (task.type === 'study') {
+                typeBadge = `<span class="text-[9px] bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 px-1.5 py-0.5 rounded-full mr-1.5"><i class="fa-solid fa-graduation-cap"></i> 공부량</span>`;
+            } else if (task.type === 'workout') {
+                typeBadge = `<span class="text-[9px] bg-purple-500/10 text-purple-300 border border-purple-500/20 px-1.5 py-0.5 rounded-full mr-1.5"><i class="fa-solid fa-dumbbell"></i> 운동량</span>`;
+            }
+
+            card.innerHTML = `
+                <div class="flex items-center gap-3 flex-1 cursor-pointer" onclick="toggleTask(${index})">
+                    <div class="w-5 h-5 rounded-md border flex items-center justify-center transition-all ${
+                        task.checked 
+                        ? 'bg-indigo-600 border-indigo-600 text-white' 
+                        : 'border-slate-600 text-transparent'
+                    }">
+                        <i class="fa-solid fa-check text-xs"></i>
+                    </div>
+                    <span class="text-xs font-medium flex items-center flex-wrap gap-0.5">${typeBadge} ${task.text}</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-[10px] bg-slate-800 text-indigo-400 px-2 py-0.5 rounded border border-slate-700/50">+${task.points}p</span>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+
+        // Update progress count
+        document.getElementById('checked-ratio').innerText = `${checkedCount}/${routineTasks.length} 달성`;
+    }
+
+    // Task check logic
+    function toggleTask(index) {
+        routineTasks[index].checked = !routineTasks[index].checked;
+        const task = routineTasks[index];
+        
+        if (task.checked) {
+            userPoints += task.points;
+            playDingSFX();
+            showCustomAlert("훌륭해요! 👑", `미션을 달성하여 ${task.points}포인트를 획득했습니다!`, "fa-crown");
+            
+            // Notify AI
+            addSystemNotificationToChat(`[코칭 브리핑]: 사용자가 루틴 미션 [${task.text}]을 완수해 포인트 +${task.points}p 획득!`);
+        } else {
+            userPoints = Math.max(0, userPoints - task.points);
+        }
+        
+        saveSystemState();
+        updatePointsDisplay();
+        renderTasks();
+    }
+
+    // Refresh Score displays
+    function updatePointsDisplay() {
+        document.getElementById('header-points').innerHTML = `${userPoints} <span class="text-xs text-slate-400">p</span>`;
+    }
+
+    // Preset setup
+    function setTimer(minutes, modeName) {
+        clearInterval(timerInterval);
+        timerIsRunning = false;
+        
+        timerTotalDuration = minutes * 60;
+        timerTimeLeft = timerTotalDuration;
+        timerModeName = modeName;
+        
+        updateTimerUI();
+        
+        document.getElementById('timer-current-mode').innerText = `${modeName} (${minutes}분)`;
+        document.getElementById('play-icon').className = "fa-solid fa-play";
+        document.getElementById('play-text').innerText = "타이머 가동";
+        document.getElementById('timer-box').classList.remove('glow-active');
+    }
+
+    function updateTimerUI() {
+        const mins = Math.floor(timerTimeLeft / 60);
+        const secs = timerTimeLeft % 60;
+        document.getElementById('timer-digits').innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        
+        // Progress bar percentage
+        const percentage = timerTimeLeft / timerTotalDuration;
+        const dashoffset = 527 - (527 * percentage);
+        document.getElementById('timer-progress-circle').setAttribute('stroke-dashoffset', dashoffset);
+    }
+
+    function resetTimerToDefault() {
+        setTimer(25, '뽀모도로 집중 공부 세션');
+    }
+
+    // Handle play and pause action
+    document.getElementById('timer-play-pause').addEventListener('click', () => {
+        if (timerIsRunning) {
+            // Pause
+            clearInterval(timerInterval);
+            timerIsRunning = false;
+            document.getElementById('play-icon').className = "fa-solid fa-play";
+            document.getElementById('play-text').innerText = "다시 시작";
+            document.getElementById('timer-status').innerText = "일시 정지";
+            document.getElementById('timer-box').classList.remove('glow-active');
+        } else {
+            // Start / Resume
+            timerIsRunning = true;
+            document.getElementById('play-icon').className = "fa-solid fa-pause";
+            document.getElementById('play-text').innerText = "일시 정지";
+            document.getElementById('timer-status').innerText = "진행 중 🔥";
+            document.getElementById('timer-box').classList.add('glow-active');
+            
+            timerInterval = setInterval(() => {
+                timerTimeLeft--;
+                updateTimerUI();
+                
+                if (timerTimeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    timerIsRunning = false;
+                    document.getElementById('timer-status').innerText = "완료!";
+                    document.getElementById('timer-box').classList.remove('glow-active');
+                    playDingSFX();
+                    
+                    // Award points on successful timer completion
+                    let pointsGained = 20; // default for timer
+                    if (timerModeName.includes('운동')) {
+                        pointsGained = 45;
+                    } else if (timerModeName.includes('식사')) {
+                        pointsGained = 15;
+                    } else if (timerModeName.includes('뽀모도로') || timerModeName.includes('공부')) {
+                        pointsGained = 25;
+                    }
+                    
+                    userPoints += pointsGained;
+                    saveSystemState();
+                    updatePointsDisplay();
+                    
+                    showCustomAlert("집념의 완수! 🎉", `${timerModeName} 타이머를 끝까지 완수하여 +${pointsGained}p 보상을 지급했습니다!`, "fa-hourglass-end");
+                    addSystemNotificationToChat(`[코칭 브리핑]: 사용자가 [${timerModeName}] 타이머를 성공적으로 끝마쳐 포인트 +${pointsGained}p 추가 획득 완료!`);
+                    
+                    resetTimerToDefault();
+                }
+            }, 1000);
+        }
+    });
+
+    document.getElementById('timer-give-up').addEventListener('click', () => {
+        clearInterval(timerInterval);
+        timerIsRunning = false;
+        timerTimeLeft = timerTotalDuration;
+        updateTimerUI();
+        document.getElementById('play-icon').className = "fa-solid fa-play";
+        document.getElementById('play-text').innerText = "타이머 가동";
+        document.getElementById('timer-status').innerText = "초기화됨";
+        document.getElementById('timer-box').classList.remove('glow-active');
+    });
+
+    function renderRewards() {
+        const container = document.getElementById('rewards-container');
+        container.innerHTML = '';
+
+        rewards.forEach(reward => {
+            const card = document.createElement('div');
+            card.className = `p-4 rounded-xl border bg-slate-900 flex justify-between items-center transition-all ${
+                userPoints >= reward.points 
+                ? 'border-purple-900/60 shadow-lg shadow-purple-950/20 hover:border-purple-500' 
+                : 'border-slate-800 opacity-70'
+            }`;
+            
+            card.innerHTML = `
+                <div>
+                    <p class="font-bold text-xs text-white">${reward.name}</p>
+                    <p class="text-[10px] text-slate-400 mt-0.5">요구 포인트: <span class="text-purple-400 font-semibold">${reward.points}p</span></p>
+                </div>
+                <button onclick="claimReward(${reward.id})" class="text-xs font-semibold px-3 py-1.5 rounded-lg transition-all ${
+                    userPoints >= reward.points
+                    ? 'bg-purple-600 text-white hover:bg-purple-500 shadow-md shadow-purple-600/10'
+                    : 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                }">
+                    교환하기
+                </button>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    function openAddRewardModal() {
+        document.getElementById('add-reward-modal').classList.remove('hidden');
+    }
+
+    function closeAddRewardModal() {
+        document.getElementById('add-reward-modal').classList.add('hidden');
+    }
+
+    function selectEmoji(emoji) {
+        document.getElementById('reward-emoji-hidden').value = emoji;
+        // Visual indicator on buttons
+        document.querySelectorAll('.emoji-btn').forEach(btn => {
+            if (btn.innerText === emoji) {
+                btn.classList.add('border-indigo-500', 'bg-indigo-950/40');
+            } else {
+                btn.classList.remove('border-indigo-500', 'bg-indigo-950/40');
+            }
+        });
+    }
+
+    function createNewReward() {
+        const name = document.getElementById('reward-name-input').value.trim();
+        const points = parseInt(document.getElementById('reward-points-input').value);
+        const emoji = document.getElementById('reward-emoji-hidden').value;
+
+        if (!name) {
+            showCustomAlert("입력 확인", "보상 상품 이름을 적어주세요!", "fa-exclamation");
+            return;
+        }
+        if (isNaN(points) || points < 50) {
+            showCustomAlert("포인트 확인", "포인트는 최소 50p 이상으로 설정해 주세요.", "fa-exclamation");
+            return;
+        }
+
+        const newId = rewards.length > 0 ? Math.max(...rewards.map(r => r.id)) + 1 : 1;
+        rewards.push({
+            id: newId,
+            name: `${name} ${emoji}`,
+            points: points,
+            emoji: emoji
+        });
+
+        // Reset Inputs
+        document.getElementById('reward-name-input').value = '';
+        document.getElementById('reward-points-input').value = '500';
+        closeAddRewardModal();
+        
+        saveSystemState();
+        renderRewards();
+        showCustomAlert("등록 성공!", `보상 상점에 [${name}]이 성공적으로 상륙했습니다. 🏆`, "fa-gift");
+    }
+
+    function claimReward(id) {
+        const reward = rewards.find(r => r.id === id);
+        if (!reward) return;
+
+        if (userPoints < reward.points) {
+            showCustomAlert("포인트 부족", "성취 포인트를 더 열심히 적립하세요! 조금만 더 하면 보상에 닿을 수 있어요.", "fa-battery-half");
+            return;
+        }
+
+        userPoints -= reward.points;
+        saveSystemState();
+        updatePointsDisplay();
+        renderRewards();
+
+        showCustomAlert("환상적인 성취! 🎉", `[${reward.name}] 교환 쿠폰이 성공적으로 발행되었습니다. 오늘 하루도 최고였습니다!`, "fa-award");
+        addSystemNotificationToChat(`[코칭 브리핑]: 사용자가 포인트로 [${reward.name}] 보상을 교환했습니다!`);
+    }
+
+    // Plan B switch handler
+    document.getElementById('planb-toggle').addEventListener('click', () => {
+        const state = !currentModePlanB;
+        loadRoutine(selectedDay, state);
+        
+        if (state) {
+            showCustomAlert("릴렉스 온 🔥", "무리하지 마세요! 계획 강도를 유연하게 단축해 Plan B로 바꿨습니다. 천천히 가볍게 성과만 채워봅시다.", "fa-umbrella");
+            addSystemNotificationToChat(`[코칭 브리핑]: 사용자가 에너지가 고갈되어 [플랜 B 루틴]을 가동했습니다. 따뜻하게 독려해 주세요.`);
+        } else {
+            showCustomAlert("풀 스퍼트 가동 🔥", "다시 오리지널 버닝 코스로 전환합니다. 파이팅 넘치게 시작합시다!", "fa-bolt");
+            addSystemNotificationToChat(`[코칭 브리핑]: 사용자가 다시 마음을 굳게 먹고 [원래 목표 루틴]으로 컴백했습니다. 하이텐션으로 지휘해 주세요.`);
+        }
+    });
+
+    // Dynamic system message generation
+    function getSystemPrompt() {
+        return `# Role: 퇴근 후 저녁 루틴 코치 비서 (Routine Coach)
+
+## [Profile]
+당신은 퇴근 후 지친 사용자의 멘탈을 케어하고, 요일별 목표(운동/공부)를 달성할 수 있도록 돕는 스마트한 루틴 코치 비서입니다. 사용자의 퇴근 시간은 매일 다르므로, 고정된 시간이 아닌 "귀가 및 운동 시점"을 기점으로 유연한 타임라인을 제시해야 합니다. 사용자가 성취감을 느끼고 지속할 수 있도록 유도하는 것이 핵심 임무입니다.
+
+## [User Dynamic Schedule & Meal Plan]
+- 월요일, 수요일: [귀가 18:00] 자격증 공부 중심 루틴
+  * 저녁 식사: 귀가 후 30분 동안 온전한 저녁 식사 시간을 가짐 (충전 후 공부 돌입)
+- 화요일, 목요일: [귀가 17:30] 운동 중심 루틴
+  * 동선: 집 안으로 들어가지 않고, '퇴근길 동선 그대로 바로 운동'하러 직행
+  * 식사: 운동 전후로 '마시는 쉐이크'로 간단히 대체 (시간 절약 및 다이어트/유지)
+- 금요일: [귀가 16:40] 자격증 공부 중심 루틴
+  * 저녁 식사: 귀가 후 30분 동안 여유롭게 저녁 식사 시간을 가짐 (식사 후 공부 돌입)
+
+## [Core Features & Interaction Rules]
+
+1. 퇴근길 프리뷰 및 요일별 맞춤 리마인드
+   - 사용자가 퇴근길에 말을 걸면 요일을 확인하고 식사 패턴과 동선을 다르게 가이드하세요.
+   - 월/수/금(공부+식사): "오늘 귀가하시면 맛있는 저녁 식사 30분 동안 편하게 하시고, 든든한 에너지를 채워서 공부 시작해 봐요! 🍚"
+   - 화/목(운동+쉐이크): "오늘 집으로 바로 들어가시면 안 됩니다! 운동 장소로 직행하시고, 저녁은 간편하게 쉐이크로 흔들어 마시는 날입니다! 🏃‍♂️🍼"
+
+2. 리얼 타이머 연동 유도
+   - 공부, 운동, 그리고 [월/수/금 저녁 식사 시간 30분]에도 타이머 활용을 제안하세요.
+   - 식사(월/수/금): "지금부터 딱 30분 동안 온전히 식사에만 집중하며 휴식하세요! 타이머 맞추고 편하게 드세요."
+   - 공부: "식사 맛있게 하셨으니 딱 25분 1세션 집중해 볼까요? 타이머 켜고 '시작'이라고 해주세요!"
+   - 운동(화/목): "운동 장소 도착하셨나요? 타이머 세팅하시고 오늘 분량 시원하게 버닝!"
+
+3. 게이밍 성취감 시스템 & '나만의 보상 상점' 운영
+   - 사용자가 단계를 완료할 때마다 누적 포인트를 계산해 주세요.
+     (예: 월/수/금 식사 후 미루지 않고 책상 앉기 +20p / 화/목 퇴근길 유혹 이겨내고 운동 직행 완료 +45p / 공부 1세션 완료 +20p)
+   - 루틴 종료 시 현재 누적 점수를 브리핑하며 동기부여를 하세요.
+     (예: "오늘 총 65p 획득! 누적 510p입니다. 목표 보상(치킨 등)까지 벌써 반을 넘었네요! 👑")
+
+4. 유연한 대처 (지쳤을 때의 플랜 B)
+   - 사용자가 너무 지쳐할 때는 따뜻하게 공감한 뒤, 난이도를 낮춘 '미니 루틴'을 제안하고 성공 시 포인트를 인정해 주세요. (예: 쉐이크 마시며 책 1페이지만 보기, 저녁 먹고 스트레칭 5분만 하기 등)
+
+5. 대화 톤앤매너
+   - 친근하고 다정한 말투(존댓말)를 사용하되, 페이스메이커처럼 활기차고 파이팅 넘치는 톤을 유지하세요. 적절한 이모지(🔥, ⏱️, 🏃‍♂️, 🍚, 📚)를 적극 활용하세요.
+
+## [Current Dynamic Application State]
+- 선택된 요일: ${getWeekdayName(selectedDay)}
+- 플랜 B 모드 적용 여부: ${currentModePlanB ? "예 (활성화 상태)" : "아니오 (오리지널 상태)"}
+- 사용자 현재 누적 성취 포인트: ${userPoints}p
+- 진행중인 미션 목록: ${JSON.stringify(routineTasks)}`;
+    }
+
+    function getWeekdayName(num) {
+        const days = ["일요일", "월요일", "화요일", "수요일", "목요일", "금요일", "토요일"];
+        return days[num] || "미확인";
+    }
+
+    function appendChatMessage(sender, text, isAI = false) {
+        const chatWindow = document.getElementById('chat-messages');
+        const bubble = document.createElement('div');
+        bubble.className = `flex gap-3 items-start ${sender === 'user' ? 'justify-end' : ''}`;
+        
+        const avatar = isAI 
+            ? '<div class="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold text-xs flex-shrink-0">Y</div>'
+            : '';
+            
+        const bubbleStyle = isAI
+            ? 'bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 max-w-[85%] text-slate-200'
+            : 'bg-indigo-600 text-white rounded-xl px-3.5 py-2.5 max-w-[85%] font-medium';
+            
+        bubble.innerHTML = `
+            ${avatar}
+            <div class="${bubbleStyle}">
+                ${text.replace(/\n/g, '<br>')}
+            </div>
+        `;
+        
+        chatWindow.appendChild(bubble);
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+
+    // Add invisible context metadata into Gemini chat history to keep coach informed of points/missions
+    function addSystemNotificationToChat(metaText) {
+        chatHistory.push({ role: "user", parts: [{ text: `[시스템 메타 데이터]: ${metaText}` }] });
+    }
+
+    async function sendMessageToAI(customMessage = null) {
+        const inputEl = document.getElementById('chat-input');
+        const text = customMessage || inputEl.value.trim();
+        
+        if (!text) return;
+        
+        if (!customMessage) {
+            inputEl.value = '';
+        }
+
+        // Draw user message
+        appendChatMessage('user', text, false);
+        chatHistory.push({ role: "user", parts: [{ text: text }] });
+
+        // Show thinking loader
+        const loader = document.getElementById('chat-loader');
+        loader.classList.remove('hidden');
+
+        try {
+            const apiKey = ""; // Left empty as requested to auto-authenticate in Canvas environment
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+            const systemInstructionText = getSystemPrompt();
+
+            const payload = {
+                contents: chatHistory,
+                systemInstruction: {
+                    parts: [{ text: systemInstructionText }]
+                }
+            };
+
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                throw new Error("API call failed");
+            }
+
+            const result = await response.json();
+            const candidate = result.candidates?.[0];
+            
+            if (candidate && candidate.content?.parts?.[0]?.text) {
+                const generatedResponse = candidate.content.parts[0].text;
+                
+                // Add AI response to history
+                chatHistory.push(candidate.content);
+                
+                // Render response
+                appendChatMessage('coach', generatedResponse, true);
+            } else {
+                appendChatMessage('coach', "죄송해요, 순간 데이터 흐름이 고르지 못했네요. 다시 한 번 말씀해 주실래요?", true);
+            }
+        } catch (error) {
+            console.error("Gemini API Error", error);
+            // Fallback response if offline or error
+            const fallbackMsg = "오늘도 정말 고생 많으셨어요! 제가 지금 인터넷 연결 상태가 원활치 않지만, 무엇이든 한 가지 행동을 곧바로 수행하시는 것만으로 큰 의미가 있습니다. 타이머 버튼을 켜고 지금 시작해 보세요! 🔥";
+            appendChatMessage('coach', fallbackMsg, true);
+        } finally {
+            loader.classList.add('hidden');
+        }
+    }
+
+    function renderQuickReplies() {
+        const wrapper = document.getElementById('quick-reply-wrapper');
+        wrapper.innerHTML = '';
+        
+        let replies = [];
+        
+        if (selectedDay === 1 || selectedDay === 3 || selectedDay === 5) {
+            // Study Days
+            replies = [
+                { text: "버스 안인데 퇴근길 프리뷰해줘 🚌", msg: `지금 퇴근버스 타고 집 가는 중이야! 귀가 예정 시간은 대략 18:00야. 오늘의 프리뷰를 들려줘!` },
+                { text: "집 도착! 식사 30분 타이머 시작 🍚", msg: "집 드디어 문 열고 들어왔어! 든든하게 먹을 식사 타이머 30분 키고 먹을게." },
+                { text: "밥 다 먹었어! 자격증 공부하자 📚", msg: "저녁 배부르게 먹었어! 이제 책상 앞에 딱 25분간 앉을 준비 완료했어." },
+                { text: "너무 지쳐서 힘들어... 살려줘 🛌", msg: "오늘 회사에서 일이 너무 많아서 힘드네... 루틴 가볍게 할 수 있는 플랜B 제안해줘!" }
+            ];
+        } else {
+            // Workout Days
+            replies = [
+                { text: "퇴근길인데 바로 운동 동선 체크! 🏃‍♂️", msg: "지금 퇴근 가방 짊어지고 지하철 탔어! 바로 헬스장(또는 운동지) 직행할건데 힘 좀 불어넣어줘!" },
+                { text: "운동 장소 세이프! 운동 가동 ⏱️", msg: "귀가 문 열지 않고 바로 센터 도착 성공했어! 이제부터 타이머 재고 45분 버닝 들어간다." },
+                { text: "마시는 쉐이크 완료, 쾌감 샤워 🍼", msg: "운동 완벽 마무리에 쉐이크까지 원샷 완료했다! 몸이 너무 개운해." },
+                { text: "다리 풀렸어... 오늘은 좀 가벼운 거 없을까?", msg: "어깨랑 다리가 너무 뻐근하고 부어올라... 빡세게 가기 힘든데 힐링할 수 있는 플랜B 제안해줘!" }
+            ];
+        }
+
+        replies.forEach(reply => {
+            const btn = document.createElement('button');
+            btn.className = "bg-indigo-950/40 hover:bg-indigo-900/40 border border-indigo-900/40 text-slate-300 hover:text-white px-2.5 py-1 rounded-lg text-[11px] whitespace-nowrap transition-all";
+            btn.innerText = reply.text;
+            btn.onclick = () => sendMessageToAI(reply.msg);
+            wrapper.appendChild(btn);
+        });
+    }
+
+    function resetChatHistory() {
+        chatHistory = [];
+        document.getElementById('chat-messages').innerHTML = `
+            <div class="flex gap-3 items-start">
+                <div class="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold text-xs flex-shrink-0">Y</div>
+                <div class="bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 max-w-[85%] text-slate-200">
+                    반갑습니다! 대화가 완전히 포맷되었습니다. <br>오늘도 성취를 이루고 보상을 등록해 봅시다! 어떤 하루를 보낼 예정이신가요?
+                </div>
+            </div>
+        `;
+    }
+
+    // Handle standard inputs
+    document.getElementById('chat-send-btn').addEventListener('click', () => sendMessageToAI());
+    document.getElementById('chat-input').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendMessageToAI();
+    });
+
+    // Handle weekday simulations
+    document.getElementById('day-selector').addEventListener('change', (e) => {
+        selectedDay = parseInt(e.target.value);
+        currentModePlanB = false;
+        loadRoutine(selectedDay, false);
+    });
+
+    window.onload = function() {
+        // Find actual day of the week to default properly (Mon-Fri)
+        const actualDayNum = new Date().getDay(); // 0: Sun, 1: Mon, etc.
+        let defaultSimulatedDay = 1; // Default to Mon if weekend
+        if (actualDayNum >= 1 && actualDayNum <= 5) {
+            defaultSimulatedDay = actualDayNum;
+        }
+        
+        selectedDay = defaultSimulatedDay;
+        document.getElementById('day-selector').value = selectedDay.toString();
+        
+        // Load initial core elements
+        loadRoutine(selectedDay, false);
+        renderRewards();
+        updatePointsDisplay();
+        resetTimerToDefault();
+        
+        // Add pleasant welcome prompt message implicitly in background
+        addSystemNotificationToChat("첫 만남 가이드라인에 맞춘 시작 멘트로 대화해 주세요.");
+    }
+</script>
+</body>
+</html>
